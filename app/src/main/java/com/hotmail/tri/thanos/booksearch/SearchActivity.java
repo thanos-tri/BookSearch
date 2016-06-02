@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutionException;
 
 public class SearchActivity extends AppCompatActivity {
 
-    private List<Book> books;
+    private List<BookTitle> books;
     private ImageButton searchButton;
     private EditText searchText;
     private ProgressBar searchLoadingSpinner;
@@ -110,14 +110,15 @@ public class SearchActivity extends AppCompatActivity {
                 View child = recyclerView.findChildViewUnder(motionEvent.getX(), motionEvent.getY());
 
                 if( child != null && detector.onTouchEvent(motionEvent)){
-                    // Need to pass title, author, coverId (or coverOLID) and editionKeys to make the new list
-                    Book current = books.get(recyclerView.getChildAdapterPosition(child));
+                    // Passing editionKeys, authors, title and cover bitmap (to avoid extra download)
+                    BookTitle current = books.get(recyclerView.getChildAdapterPosition(child));
 
                     Intent intent = new Intent(SearchActivity.this, EditionsActivity.class);
-                    intent.putStringArrayListExtra("editionKeys", current.getEditionKeys());
-                    intent.putExtra("allAuthors", current.getAuthorsString());
+
                     intent.putExtra("fullTitle", current.getFullTitle());
-                    intent.putExtra("cover", current.getCover());
+                    intent.putExtra("allAuthors", current.getAuthorsString());
+                    intent.putExtra("coverBitmap", current.getCoverBitmap());
+                    intent.putStringArrayListExtra("editionKeys", current.getEditionKeys());
 
                     startActivity(intent);
 
@@ -186,14 +187,14 @@ public class SearchActivity extends AppCompatActivity {
 
     private class ListManager extends AsyncTask<String, Void, Void> {
 
-        private void createBookTitles(JSONArray docs){
+        private void populateBookTitleList(JSONArray docs){
             for(int i=0; i < docs.length(); i++){
                 try {
                     JSONObject obj = docs.getJSONObject(i);
-                    final Book b = new Book();
-                    b.addTitle(obj.getString("title"));
+                    BookTitle b = new BookTitle();
+                    b.setTitle(obj.getString("title"));
                     if(obj.has("subtitle")) {
-                        b.addSubtitle(obj.getString("subtitle"));
+                        b.setSubtitle(obj.getString("subtitle"));
                     }
                     if(obj.has("author_name")) {
                         JSONArray authors = obj.getJSONArray("author_name");
@@ -206,35 +207,37 @@ public class SearchActivity extends AppCompatActivity {
                         b.addEditionKey(editionKeys.getString(j));
                     }
                     if(obj.has("cover_i")){
-                        b.addCoverId( obj.getString("cover_i") );
-                        b.addCoverURL(Book.MEDIUM);
+                        b.setCoverID( obj.getString("cover_i") );
+                        b.buildCoverURL(BookTitle.MEDIUM);
                     }
                     else if(obj.has("cover_edition_key")){
-                        b.addCoverOLID( obj.getString("cover_edition_key"));
-                        b.addCoverURL(Book.MEDIUM);
+                        b.setCoverOLID( obj.getString("cover_edition_key"));
+                        b.buildCoverURL(BookTitle.MEDIUM);
                     }
                     if(b.hasCoverId() || b.hasCoverOLID()){
-                        Bitmap bmp = Glide.with(SearchActivity.this.getApplicationContext()).load(b.getCoverUrl()).asBitmap().into(-1, -1).get();
+                        Bitmap bmp = Glide.with(SearchActivity.this.getApplicationContext()).load(b.getCoverURL()).asBitmap().into(-1, -1).get();
                         b.setCoverBitmap(bmp);
                     }
                     books.add(b);
                 } catch (JSONException e){
-                    Log.w("JSON", "Could not retrieve data for JSONObject in position " + i);
+                    Log.e("JSON", "Could not retrieve data for JSONObject in position " + i);
                     e.printStackTrace();
                 } catch (ExecutionException e){
+                    Log.e("JSON", "Execution error, download aborted");
                     e.printStackTrace();
                 } catch (InterruptedException e){
+                    Log.e("JSON", "Image download interrupted");
                     e.printStackTrace();
                 }
             }
         }
 
-        private void emptyList(){
+        private void emptyBookTitleList(){
             books.clear();
             System.gc();
         }
 
-        private String queryString(String input){
+        private String buildQueryString(String input){
             StringBuilder builder = new StringBuilder();
 
             for(String s : input.split(" ")){
@@ -252,7 +255,7 @@ public class SearchActivity extends AppCompatActivity {
             String action = "search";
             String type = ".json";
             String searchType = "title";
-            String query = queryString(input);
+            String query = buildQueryString(input);
 
             buffer  .append(domain)
                     .append(action)
@@ -279,7 +282,7 @@ public class SearchActivity extends AppCompatActivity {
 
         @Override
         protected void onPreExecute() {
-            emptyList();
+            emptyBookTitleList();
             searchLoadingSpinner.setVisibility(View.VISIBLE);
             noResultsText.setVisibility(View.GONE);
         }
@@ -323,7 +326,7 @@ public class SearchActivity extends AppCompatActivity {
                 docs = concatArray(docs, downloader.getJSONArrayFromJSONObject(obj, "docs"));
             }
 
-            createBookTitles(docs);
+            populateBookTitleList(docs);
             return null;
         }
 
@@ -340,7 +343,7 @@ public class SearchActivity extends AppCompatActivity {
 
         @Override
         protected void onCancelled(Void voidElement) {
-            emptyList();
+            emptyBookTitleList();
         }
     }
 }

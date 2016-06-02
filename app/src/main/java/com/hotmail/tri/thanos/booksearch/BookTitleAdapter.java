@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.List;
 
 public class BookTitleAdapter extends RecyclerView.Adapter<BookTitleAdapter.BookViewHolder>{
-    private List<Book> books;
+    private List<BookTitle> books;
 
     public class BookViewHolder extends RecyclerView.ViewHolder{
         public ImageView thumbnail;
@@ -27,7 +27,7 @@ public class BookTitleAdapter extends RecyclerView.Adapter<BookTitleAdapter.Book
         }
     }
 
-    public BookTitleAdapter(List<Book> books){
+    public BookTitleAdapter(List<BookTitle> books){
         this.books = books;
     }
 
@@ -42,12 +42,12 @@ public class BookTitleAdapter extends RecyclerView.Adapter<BookTitleAdapter.Book
 
     @Override
     public void onBindViewHolder(final BookViewHolder holder, int position) {
-        final Book current = books.get(position);
-        if(!current.hasCover()) {
+        final BookTitle current = books.get(position);
+        if(!current.hasCoverBitmap()) {
             holder.thumbnail.setImageResource(R.drawable.no_cover);
         }
         else{
-            holder.thumbnail.setImageBitmap(current.getCover());
+            holder.thumbnail.setImageBitmap(current.getCoverBitmap());
         }
         holder.fullTitle.setText(current.getFullTitle());
         holder.authors.setText(current.getAuthorsString());

@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutionException;
 
 public class EditionsActivity extends AppCompatActivity {
 
-    private List<Book> books;
+    private List<BookEdition> books;
 
     private ImageView coverImage;
     private TextView titleText;
@@ -75,15 +75,20 @@ public class EditionsActivity extends AppCompatActivity {
     private void renderTopUI(int editions){
         String fullTitle = getIntent().getStringExtra("fullTitle");
         String authors = getIntent().getStringExtra("allAuthors");
-        String coverUrl = getIntent().getStringExtra("coverUrl");
-        Bitmap cover = getIntent().getParcelableExtra("cover");
-        if(cover == null)
+        Bitmap coverBitmap = getIntent().getParcelableExtra("coverBitmap");
+        if(coverBitmap == null)
             coverImage.setImageResource(R.drawable.no_cover);
         else
-            coverImage.setImageBitmap(cover);
+            coverImage.setImageBitmap(coverBitmap);
         titleText.setText(fullTitle);
-        authorsText.setText("By " + authors);
-        editionsText.setText("Found " + editions + " editions for this title:");
+
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("By ").append(authors);
+        authorsText.setText(buffer.toString());
+
+        buffer = new StringBuffer();
+        buffer.append("Found ").append(editions).append(" editions for this title:");
+        editionsText.setText(buffer.toString());
     }
 
     private void addListenerToRecycleView(){
@@ -105,15 +110,17 @@ public class EditionsActivity extends AppCompatActivity {
 
                 if( child != null && detector.onTouchEvent(motionEvent)){
                     // Need to pass title, author, coverId (or coverOLID) and editionKeys to make the new list
-                    Book current = books.get(recyclerView.getChildAdapterPosition(child));
+                    BookEdition current = books.get(recyclerView.getChildAdapterPosition(child));
 
                     Intent intent = new Intent(EditionsActivity.this, DetailsActivity.class);
-                    intent.putExtra("authors", current.getAuthorsString());
+
                     intent.putExtra("fullTitle", current.getFullTitle());
+                    intent.putExtra("authors", current.getAuthorsString());
+                    intent.putExtra("cover", current.getCoverBitmap());
+                    intent.putExtra("url", current.getReferenceURL());
+                    intent.putExtra("pages", current.getNumberOfPages() + "");
                     intent.putExtra("publishers", current.getPublishersString());
-                    intent.putExtra("url", current.getBookUrl());
-                    intent.putExtra("pages", current.getPages() + "");
-                    intent.putExtra("cover", current.getCover());
+
                     startActivity(intent);
 
                     return true;
@@ -161,6 +168,54 @@ public class EditionsActivity extends AppCompatActivity {
 
     private class ListManager extends AsyncTask<String, Void, Void>{
 
+        private void populateBookEditionList(JSONObject object){
+            try {
+                BookEdition b = new BookEdition();
+                b.setTitle(object.getString("title"));
+                if(object.has("subtitle"))
+                    b.setSubtitle(object.getString("subtitle"));
+                if(object.has("authors")){
+                    JSONArray authorsArray = object.getJSONArray("authors");
+                    for(int j=0; j < authorsArray.length(); j++){
+                        b.addAuthor(authorsArray.getJSONObject(j).getString("name"));
+                    }
+                }
+                if(object.has("cover"))
+                    b.setCoverURL(object.getJSONObject("cover").getString("medium"));
+                if(object.has("url"))
+                    b.setReferenceURL(object.getString("url"));
+                if(object.has("number_of_pages"))
+                    b.setNumberOfPages(Integer.parseInt(object.getString("number_of_pages")));
+                if(object.has("publishers")){
+                    JSONArray array = object.getJSONArray("publishers");
+                    for(int j=0; j < array.length(); j++){
+                        b.addPublisher(array.getJSONObject(j).getString("name"));
+                    }
+                }
+                if(b.hasCoverURL()){
+                    Bitmap bmp = Glide.with(EditionsActivity.this.getApplicationContext()).load(b.getCoverURL()).asBitmap().into(-1, -1).get();
+                    b.setCoverBitmap(bmp);
+                }
+                books.add(b);
+            }catch (JSONException e){
+                Log.e("JSON", "Could not retrieve data for JSONObject");
+                e.printStackTrace();
+            }
+            catch (ExecutionException e){
+                Log.e("JSON", "Execution error, download aborted");
+                e.printStackTrace();
+            }
+            catch (InterruptedException e){
+                Log.e("JSON", "Image download interrupted");
+                e.printStackTrace();
+            }
+        }
+
+        private void emptyBookEditionList(){
+            books.clear();
+            System.gc();
+        }
+
         private String buildFetchInfoURLString(String editionKey){
             StringBuffer buffer = new StringBuffer();
             String domain = "https://openlibrary.org/api/books?bibkeys=";
@@ -179,14 +234,9 @@ public class EditionsActivity extends AppCompatActivity {
             return buffer.toString();
         }
 
-        private void emptyList(){
-            books.clear();
-            System.gc();
-        }
-
         @Override
         protected void onPreExecute() {
-            books.clear();
+            emptyBookEditionList();
             editionsLoadingSpinner.setVisibility(View.VISIBLE);
         }
 
@@ -201,10 +251,19 @@ public class EditionsActivity extends AppCompatActivity {
                 JSONObject obj = downloader.downloadJSONObject();
 
                 if(obj.has("OLID:" + params[i])){
-                    JSONObject bookObj;
+                    JSONObject bookObject;
+                    try{
+                        bookObject = obj.getJSONObject("OLID:" + params[i]);
+                    }catch (JSONException e){
+                        Log.e("JSON", "Could not retrieve data for object in index " + i);
+                        e.printStackTrace();
+                        return null;
+                    }
+                    populateBookEditionList(bookObject);
+                    /*
                     try {
                         bookObj = obj.getJSONObject("OLID:" + params[i]);
-                        Book b = new Book();
+                        b = new BookEdition();
                         b.addTitle(bookObj.getString("title"));
                         if(bookObj.has("subtitle"))
                             b.addSubtitle(bookObj.getString("subtitle"));
@@ -242,6 +301,7 @@ public class EditionsActivity extends AppCompatActivity {
                     catch (InterruptedException e){
                         e.printStackTrace();
                     }
+                    */
                 }
             }
             return null;
@@ -257,7 +317,7 @@ public class EditionsActivity extends AppCompatActivity {
         }
         @Override
         protected void onCancelled(Void voidElement) {
-            emptyList();
+            emptyBookEditionList();
         }
     }
 }
