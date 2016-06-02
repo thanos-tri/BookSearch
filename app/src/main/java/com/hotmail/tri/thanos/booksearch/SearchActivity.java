@@ -243,8 +243,9 @@ public class SearchActivity extends AppCompatActivity {
         private String buildQueryString(String input){
             StringBuilder builder = new StringBuilder();
 
+            // For the search to complete properly, we need to turn everything to lowercase
             for(String s : input.split(" ")){
-                builder.append(s);
+                builder.append(s.toLowerCase());
                 builder.append("+");
             }
             builder.deleteCharAt(builder.length() - 1);
