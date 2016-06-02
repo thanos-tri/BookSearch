@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Book search</string>
+    <string name="thumbnail_string">Book Thumbnail</string>
+    <string name="title_init_text">Title</string>
+    <string name="authors_init_text">Authors</string>
+    <string name="editions_num_init_text"># editions</string>
+</resources>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:contentDescription="@string/thumbnail_string"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/cover"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginEnd="5dp"
+        android:src="@drawable/no_cover" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="#000000"
+        android:text="@string/title_init_text"
+        android:id="@+id/fullTitle"
+        android:layout_alignTop="@+id/cover"
+        android:layout_toRightOf="@+id/cover"
+        android:layout_toEndOf="@+id/cover"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
+        android:ellipsize="end"
+        android:maxLines="3" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="@string/authors_init_text"
+        android:id="@+id/authors"
+        android:layout_alignBottom="@+id/cover"
+        android:layout_toRightOf="@+id/cover"
+        android:layout_toEndOf="@+id/cover"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="@string/editions_num_init_text"
+        android:id="@+id/editionNumber"
+        android:layout_toRightOf="@id/authors"
+        android:layout_toEndOf="@id/authors"
+        android:gravity="end"
+        android:layout_alignBottom="@+id/cover"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:maxLines="1"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
+        android:textStyle="italic"
+        />
+</RelativeLayout>
