@@ -13,6 +13,7 @@
         android:layout_width="125dp"
         android:layout_height="130dp"
         android:id="@+id/coverImage"
+        android:contentDescription="@string/book_title_cover_string"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -22,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Title"
+        android:text="@string/title_init_text"
         android:id="@+id/titleText"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/coverImage"
@@ -30,20 +31,20 @@
         android:gravity="end|center_horizontal"
         android:layout_alignTop="@+id/coverImage"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        />
+        android:layout_alignParentEnd="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="By"
+        android:text="@string/editions_authors_init_text"
         android:id="@+id/authorsText"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:gravity="bottom|end"
         android:textStyle="italic"
         android:layout_toRightOf="@+id/coverImage"
+        android:layout_toEndOf="@+id/coverImage"
         android:layout_below="@+id/titleText"
         android:layout_alignBottom="@+id/coverImage"
         android:layout_marginTop="5dp" />
@@ -52,7 +53,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Found # editions for this title:"
+        android:text="@string/editions_found_number"
         android:id="@+id/editionsText"
         android:layout_below="@+id/coverImage"
         android:layout_alignParentLeft="true"
@@ -79,15 +80,8 @@
             android:id="@+id/editionsRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
             android:scrollbars="vertical"
-            android:layout_below="@+id/searchText"
-            android:layout_marginTop="5dp"
-            />
+            android:layout_marginTop="5dp" />
 
         <ProgressBar
             style="?android:progressBarStyle"

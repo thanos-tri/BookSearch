@@ -42,7 +42,7 @@ public class EditionsActivity extends AppCompatActivity {
     private RecyclerView bookEditionsList;
     private ProgressBar editionsLoadingSpinner;
 
-    private ListManager manager;
+    ListManager manager;
 
     private void initComponents(){
         // Init book list
@@ -60,10 +60,13 @@ public class EditionsActivity extends AppCompatActivity {
         bookEditionsList = (RecyclerView) findViewById(R.id.editionsRecyclerView);
         assert bookEditionsList != null;
         bookEditionsList.setHasFixedSize(true);
+        bookEditionsList.setItemAnimator(new DefaultItemAnimator());
+        BookEditionAdapter adapter = new BookEditionAdapter(books);
+        bookEditionsList.setAdapter(adapter);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         bookEditionsList.setLayoutManager( manager );
-        bookEditionsList.setItemAnimator(new DefaultItemAnimator());
+
 
         // Init ProgressBar loading spinner component
         editionsLoadingSpinner = (ProgressBar) findViewById(R.id.editionsLoadingSpinner);
@@ -139,9 +142,9 @@ public class EditionsActivity extends AppCompatActivity {
         NetworkInfo activeNetworkInfo = connectionManager.getActiveNetworkInfo();
         if(activeNetworkInfo == null)
             return false;
-        if(activeNetworkInfo.isConnected())
-            return true;
-        return false;
+        else if(!activeNetworkInfo.isConnected())
+            return false;
+        return true;
     }
 
     @Override
@@ -260,48 +263,6 @@ public class EditionsActivity extends AppCompatActivity {
                         return null;
                     }
                     populateBookEditionList(bookObject);
-                    /*
-                    try {
-                        bookObj = obj.getJSONObject("OLID:" + params[i]);
-                        b = new BookEdition();
-                        b.addTitle(bookObj.getString("title"));
-                        if(bookObj.has("subtitle"))
-                            b.addSubtitle(bookObj.getString("subtitle"));
-                        if(bookObj.has("cover")) {
-                            b.addCoverURL(bookObj.getJSONObject("cover").getString("medium"));
-                        }
-                        if(bookObj.has("url")){
-                            b.setBookUrl(bookObj.getString("url"));
-                        }
-                        if(bookObj.has("number_of_pages"))
-                            b.addPages(Integer.parseInt(bookObj.getString("number_of_pages")));
-                        if(bookObj.has("authors")){
-                            JSONArray authorsArray = bookObj.getJSONArray("authors");
-                            for(int j=0; j < authorsArray.length(); j++){
-                                b.addAuthor(authorsArray.getJSONObject(j).getString("name"));
-                            }
-                        }
-                        if(bookObj.has("publishers")){
-                            JSONArray array = bookObj.getJSONArray("publishers");
-                            for(int j=0; j < array.length(); j++){
-                                b.addPublisher(array.getJSONObject(j).getString("name"));
-                            }
-                        }
-                        if(b.hasCoverUrl()){
-                            Bitmap bmp = Glide.with(EditionsActivity.this.getApplicationContext()).load(b.getCoverUrl()).asBitmap().into(-1, -1).get();
-                            b.setCoverBitmap(bmp);
-                        }
-                        books.add(b);
-                    }catch (JSONException e){
-                        e.printStackTrace();
-                    }
-                    catch (ExecutionException e){
-                        e.printStackTrace();
-                    }
-                    catch (InterruptedException e){
-                        e.printStackTrace();
-                    }
-                    */
                 }
             }
             return null;
@@ -311,8 +272,6 @@ public class EditionsActivity extends AppCompatActivity {
         protected void onPostExecute(Void aVoid) {
             editionsLoadingSpinner.setVisibility(View.GONE);
 
-            BookEditionAdapter adapter = new BookEditionAdapter(books);
-            bookEditionsList.setAdapter(adapter);
             // TODO implement items per page!! See Endless RecyclerView Scroll Listener
         }
         @Override

@@ -9,9 +9,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-
-
 public class DetailsActivity extends AppCompatActivity {
 
     private ImageView detailsCoverImage;
@@ -45,15 +42,25 @@ public class DetailsActivity extends AppCompatActivity {
         Bitmap bmp = getIntent().getParcelableExtra("cover");
         final String url = getIntent().getStringExtra("url");
 
-        detailsCoverImage.setImageBitmap(bmp);
+        if(bmp != null)
+            detailsCoverImage.setImageBitmap(bmp);
+        else
+            detailsCoverImage.setImageResource(R.drawable.no_cover);
 
         detailsTitleText.setText(title);
         detailsAuthorsText.setText(authors);
-        detailsPublisherText.setText("Published by:\n" + publishers);
-        if(Integer.parseInt(pages) > 0)
-            detailsPagesText.setText(pages + " pages");
-        else
-            detailsPagesText.setText("E-book");
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("Published by:\n").append(publishers);
+        detailsPublisherText.setText(buffer.toString());
+        buffer = new StringBuffer();
+        if(Integer.parseInt(pages) > 0){
+            buffer.append(pages).append(" pages");
+            detailsPagesText.setText(buffer.toString());
+        }
+        else{
+            buffer.append("E-book");
+            detailsPagesText.setText(buffer);
+        }
 
         // Add OnClickListener to ImageButton for sharing
 

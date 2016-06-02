@@ -16,12 +16,14 @@ public class BookEditionAdapter extends RecyclerView.Adapter<BookEditionAdapter.
         public ImageView cover;
         public TextView fullTitle;
         public TextView authors;
+        public TextView bookType;
 
         public BookViewHolder(View v){
             super(v);
             cover = (ImageView) v.findViewById(R.id.cover);
             fullTitle = (TextView) v.findViewById(R.id.fullTitle);
             authors = (TextView) v.findViewById(R.id.authors);
+            bookType = (TextView) v.findViewById(R.id.bookType);
         }
     }
 
@@ -40,13 +42,17 @@ public class BookEditionAdapter extends RecyclerView.Adapter<BookEditionAdapter.
 
     @Override
     public void onBindViewHolder(BookViewHolder holder, int position) {
-        Book current = books.get(position);
+        BookEdition current = books.get(position);
         if(current.hasCoverBitmap())
             holder.cover.setImageBitmap(current.getCoverBitmap());
         else
             holder.cover.setImageResource(R.drawable.no_cover);
         holder.fullTitle.setText(current.getFullTitle());
         holder.authors.setText(current.getAuthorsString());
+        if(current.getNumberOfPages() <= 0)
+            holder.bookType.setText(R.string.ebook_string);
+        else
+            holder.bookType.setText(R.string.paper_book_string);
     }
 
     @Override

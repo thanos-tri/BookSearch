@@ -1,7 +1,19 @@
 <resources>
     <string name="app_name">Book search</string>
+    <string name="search_button_string">Search for books</string>
+    <string name="share_button_string">Share link for a book</string>
+    <string name="share_text_string">Share this book</string>
     <string name="thumbnail_string">Book Thumbnail</string>
+    <string name="book_title_cover_string">Cover for book title</string>
     <string name="title_init_text">Title</string>
     <string name="authors_init_text">Authors</string>
     <string name="editions_num_init_text"># editions</string>
+    <string name="pages_init_string"># pages</string>
+    <string name="search_edit_text_hint">Search for a book</string>
+    <string name="no_results_found_string">No results found</string>
+    <string name="editions_authors_init_text">By </string>
+    <string name="editions_found_number">Found # editions for this title:</string>
+    <string name="publisher_init_string">Published by:\nPublisher</string>
+    <string name="ebook_string">E-book</string>
+    <string name="paper_book_string">Paper book</string>
 </resources>

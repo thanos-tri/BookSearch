@@ -59,6 +59,5 @@
         android:maxLines="1"
         android:layout_marginLeft="5dp"
         android:layout_marginStart="5dp"
-        android:textStyle="italic"
-        />
+        android:textStyle="italic" />
 </RelativeLayout>

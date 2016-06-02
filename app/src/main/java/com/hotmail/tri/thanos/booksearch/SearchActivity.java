@@ -68,15 +68,16 @@ public class SearchActivity extends AppCompatActivity {
         bookTitleList = (RecyclerView) findViewById(R.id.searchRecyclerView);
         assert bookTitleList != null;
         bookTitleList.setHasFixedSize(true);
+        bookTitleList.setItemAnimator(new DefaultItemAnimator());
+        BookTitleAdapter adapter = new BookTitleAdapter(books);
+        bookTitleList.setAdapter(adapter);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         bookTitleList.setLayoutManager( manager );
-        bookTitleList.setItemAnimator(new DefaultItemAnimator());
 
         // Init TextView component
         noResultsText = (TextView) findViewById(R.id.noResultsText);
         assert noResultsText != null;
-        noResultsText.setText("No results found");
         noResultsText.setVisibility(View.GONE);
     }
 
@@ -148,9 +149,9 @@ public class SearchActivity extends AppCompatActivity {
         NetworkInfo activeNetworkInfo = connectionManager.getActiveNetworkInfo();
         if(activeNetworkInfo == null)
             return false;
-        if(activeNetworkInfo.isConnected())
-            return true;
-        return false;
+        else if(!activeNetworkInfo.isConnected())
+            return false;
+        return true;
     }
 
     private void startSearch(){
@@ -202,9 +203,11 @@ public class SearchActivity extends AppCompatActivity {
                             b.addAuthor(authors.getString(j));
                         }
                     }
-                    JSONArray editionKeys = obj.getJSONArray("edition_key");
-                    for(int j=0; j < editionKeys.length(); j++){
-                        b.addEditionKey(editionKeys.getString(j));
+                    if(obj.has("edition_key")) {
+                        JSONArray editionKeys = obj.getJSONArray("edition_key");
+                        for (int j = 0; j < editionKeys.length(); j++) {
+                            b.addEditionKey(editionKeys.getString(j));
+                        }
                     }
                     if(obj.has("cover_i")){
                         b.setCoverID( obj.getString("cover_i") );
@@ -320,7 +323,7 @@ public class SearchActivity extends AppCompatActivity {
             for(int i = 1; i < pages; i ++){
                 StringBuilder urlBuilder = new StringBuilder();
                 urlBuilder  .append(searchUrl)
-                        .append("&page=" + (i+1));
+                            .append("&page=" + (i+1));
                 downloader.setUrl(urlBuilder.toString());
                 obj = downloader.downloadJSONObject();
                 docs = concatArray(docs, downloader.getJSONArrayFromJSONObject(obj, "docs"));
@@ -336,8 +339,6 @@ public class SearchActivity extends AppCompatActivity {
             if(books.isEmpty())
                 noResultsText.setVisibility(View.VISIBLE);
 
-            BookTitleAdapter adapter = new BookTitleAdapter(books);
-            bookTitleList.setAdapter(adapter);
             // TODO implement items per page!! See Endless RecyclerView Scroll Listener
         }
 

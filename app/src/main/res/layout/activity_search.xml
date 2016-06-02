@@ -13,6 +13,7 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:id="@+id/searchButton"
+        android:contentDescription="@string/search_button_string"
         android:adjustViewBounds="false"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
@@ -25,7 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/searchText"
-        android:hint="Search for a book"
+        android:hint="@string/search_edit_text_hint"
         android:layout_toLeftOf="@+id/searchButton"
         android:layout_toStartOf="@+id/searchButton"
         android:layout_alignTop="@+id/searchButton"
@@ -49,13 +50,7 @@
             android:id="@+id/searchRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
             android:scrollbars="vertical"
-            android:layout_below="@+id/searchText"
             android:layout_marginTop="5dp"
             />
 
@@ -63,15 +58,16 @@
             android:layout_width="75dp"
             android:layout_height="75dp"
             android:id="@+id/searchLoadingSpinner"
-            style="?android:progressBarStyle"
             android:layout_gravity="center"
-            android:visibility="gone" />
+            android:visibility="gone"
+            style="?android:progressBarStyle" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:id="@+id/noResultsText"
+            android:text="@string/no_results_found_string"
             android:layout_gravity="center_horizontal|top"
             android:layout_marginTop="25dp"
             android:textStyle="italic" />

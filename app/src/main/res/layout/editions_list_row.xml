@@ -44,4 +44,20 @@
         android:ellipsize="end"
         android:maxLines="1" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textStyle="italic"
+        android:id="@+id/bookType"
+        android:layout_toRightOf="@+id/authors"
+        android:layout_toEndOf="@+id/authors"
+        android:layout_alignBottom="@+id/authors"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:gravity="end"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
+        android:maxLines="1" />
+
 </RelativeLayout>
