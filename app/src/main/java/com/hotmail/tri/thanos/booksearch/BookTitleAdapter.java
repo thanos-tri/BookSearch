@@ -1,6 +1,7 @@
 package com.hotmail.tri.thanos.booksearch;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,19 +72,21 @@ public class BookTitleAdapter extends RecyclerView.Adapter<BookTitleAdapter.Book
         holder.loading.setVisibility(View.GONE);
         holder.rowLayout.setVisibility(View.VISIBLE);
 
-        if(!current.hasCoverBitmap()) {
-            if(current.hasCoverId() || current.hasCoverOLID()) {
-                holder.loadCoverSpinner.setVisibility(View.VISIBLE);
-                holder.thumbnail.setVisibility(View.GONE);
-            }
-            else
-                holder.thumbnail.setImageResource(R.drawable.no_cover);
+        if(!current.hasCoverId() && !current.hasCoverOLID()){
+            holder.thumbnail.setImageResource(R.drawable.no_cover);
         }
         else{
-            holder.loadCoverSpinner.setVisibility(View.GONE);
-            holder.thumbnail.setImageBitmap(current.getCoverBitmap());
-            holder.thumbnail.setVisibility(View.VISIBLE);
+            if(current.hasCoverBitmap()) {
+                holder.thumbnail.setImageBitmap(current.getCoverBitmap());
+                holder.loadCoverSpinner.setVisibility(View.GONE);
+                holder.thumbnail.setVisibility(View.VISIBLE);
+            }
+            else{
+                holder.thumbnail.setVisibility(View.GONE);
+                holder.loadCoverSpinner.setVisibility(View.VISIBLE);
+            }
         }
+
         holder.fullTitle.setText(current.getFullTitle());
         holder.authors.setText(current.getAuthorsString());
         int size = current.getEditionKeys().size();

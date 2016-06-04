@@ -156,8 +156,6 @@ public class SearchActivity extends AppCompatActivity {
                     if(!loading && totalItemCount <= lastVisibleItem){
                         if(lessBooks.size() >= books.size()){
                             if(currentPage < maxPages) {
-                                Log.w("ASDFG", "lessBooks size " + lessBooks.size() + " vs books size " + books.size());
-                                Log.w("ASDFG", "Current page " + currentPage + " vs max pages " + maxPages + " so we need to download more data");
                                 loading = true;
                                 // Download more books
                                 currentPage++;
@@ -172,18 +170,6 @@ public class SearchActivity extends AppCompatActivity {
                             showMoreBooks(bookNum);
                             adapter.notifyDataSetChanged();
                             new DownloadManager().execute(start, start + bookNum);
-//                            new Handler().postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    adapter.notifyItemRemoved(lessBooks.size() - 1);
-//                                    lessBooks.remove(lessBooks.size() - 1);
-//
-//                                    int bookNum = Math.min(20, books.size() - lessBooks.size());
-//                                    showMoreBooks(bookNum);
-//                                    adapter.notifyDataSetChanged();
-//                                    loading = false;
-//                                }
-//                            }, 2000);
                         }
                     }
                 }
@@ -258,7 +244,7 @@ public class SearchActivity extends AppCompatActivity {
 
     private void showMoreBooks(int itemsPerPage){
         int start = lessBooks.size();
-        int end = Math.min(lessBooks.size() + itemsPerPage, books.size());
+        int end = start + itemsPerPage;
         for(int i=start; i < end; i++){
             lessBooks.add(books.get(i));
         }
@@ -426,12 +412,18 @@ public class SearchActivity extends AppCompatActivity {
             }
 
             int start = lessBooks.size();
-            int bookNum = Math.min(25, books.size() - lessBooks.size() );
+            int bookNum = Math.min(25, books.size() - start );
             showMoreBooks(bookNum);
-            new DownloadManager().execute(start, lessBooks.size());
             adapter.notifyDataSetChanged();
-            loading = false;
+            new DownloadManager().execute(start, start + bookNum);
+            adapter.notifyDataSetChanged();
         }
+        /*                             loading = true;
+                            int start = lessBooks.size();
+                            int bookNum = Math.min(25, books.size() - start);
+                            showMoreBooks(bookNum);
+                            adapter.notifyDataSetChanged();
+                            new DownloadManager().execute(start, start + bookNum);*/
     }
 
     private class DownloadManager extends AsyncTask<Integer, Integer, Void>{
@@ -461,7 +453,7 @@ public class SearchActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer ... position) {
             // Notify that a bitmap is available
-            adapter.notifyItemChanged(position[0]);
+            adapter.notifyDataSetChanged();
         }
 
         @Override
