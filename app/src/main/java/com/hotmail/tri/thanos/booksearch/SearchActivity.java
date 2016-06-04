@@ -36,17 +36,30 @@ import java.util.concurrent.ExecutionException;
 public class SearchActivity extends AppCompatActivity {
 
     private List<BookTitle> books;
+    private List<BookTitle> lessBooks;
+
     private ImageButton searchButton;
     private EditText searchText;
     private ProgressBar searchLoadingSpinner;
     private RecyclerView bookTitleList;
     private TextView noResultsText;
 
-    private ListManager manager;
+    private ListManager listManager;
+    private BookTitleAdapter adapter;
+
+    private Boolean loading;
+    private int maxPages;
+    private int currentPage;
+    private String searchTextString;
 
     private void initComponents(){
-        // Init Book list to empty list
+        // Init Book lists to empty lists
         books = new ArrayList<>();
+        lessBooks = new ArrayList<>();
+
+        // Init listManager object (avoid NullPointerExceptions)
+        int firstPage = 1;
+        listManager = new ListManager(firstPage);
 
         // Init EditText components
         searchText = (EditText) findViewById(R.id.searchText);
@@ -69,7 +82,7 @@ public class SearchActivity extends AppCompatActivity {
         assert bookTitleList != null;
         bookTitleList.setHasFixedSize(true);
         bookTitleList.setItemAnimator(new DefaultItemAnimator());
-        BookTitleAdapter adapter = new BookTitleAdapter(books);
+        adapter = new BookTitleAdapter(lessBooks);
         bookTitleList.setAdapter(adapter);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -87,7 +100,7 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if(event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER){
-                    startSearch();
+                    initSearch();
                     return true;
                 }
                 return false;
@@ -132,16 +145,105 @@ public class SearchActivity extends AppCompatActivity {
             public void onTouchEvent(RecyclerView rv, MotionEvent e) {
             }
         });
+        bookTitleList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if(recyclerView.getLayoutManager() instanceof LinearLayoutManager){
+                    final LinearLayoutManager manager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                    int totalItemCount = manager.getItemCount();
+                    int lastVisibleItem = 1 + manager.findLastVisibleItemPosition();
+                    if(!loading && totalItemCount <= lastVisibleItem){
+                        if(lessBooks.size() >= books.size()){
+                            if(currentPage < maxPages) {
+                                Log.w("ASDFG", "lessBooks size " + lessBooks.size() + " vs books size " + books.size());
+                                Log.w("ASDFG", "Current page " + currentPage + " vs max pages " + maxPages + " so we need to download more data");
+                                loading = true;
+                                // Download more books
+                                currentPage++;
+                                new ListManager(currentPage).execute(searchTextString);
+                            }
+                        }
+                        else{
+                            // Load more from books list
+                            loading = true;
+                            int start = lessBooks.size();
+                            int bookNum = Math.min(25, books.size() - start);
+                            showMoreBooks(bookNum);
+                            adapter.notifyDataSetChanged();
+                            new DownloadManager().execute(start, start + bookNum);
+//                            new Handler().postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    adapter.notifyItemRemoved(lessBooks.size() - 1);
+//                                    lessBooks.remove(lessBooks.size() - 1);
+//
+//                                    int bookNum = Math.min(20, books.size() - lessBooks.size());
+//                                    showMoreBooks(bookNum);
+//                                    adapter.notifyDataSetChanged();
+//                                    loading = false;
+//                                }
+//                            }, 2000);
+                        }
+                    }
+                }
+            }
+        });
 
         // Add OnClickListener on Button to initiate the search when clicked
         searchButton.setOnClickListener(
-                new Button.OnClickListener(){
-                    @Override
-                    public void onClick(View v) {
-                        startSearch();
-                    }
+            new Button.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    // TODO fix focus to close soft keyboard
+                    initSearch();
                 }
+            }
         );
+    }
+
+    private void initSearch(){
+        // Clear focus off EditText
+        searchText.clearFocus();
+
+        // If the user has no internet connection method returns
+        if(!isNetworkAvailable()) {
+            Toast.makeText(SearchActivity.this, "Not connected to the internet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // If another search is underway, cancel it and start over the new
+        if(listManager.getStatus() == AsyncTask.Status.RUNNING){
+            // New search initiated. Cancel task
+            Toast.makeText(SearchActivity.this, "Canceling previous search...", Toast.LENGTH_SHORT).show();
+            listManager.cancel(true);
+        }
+
+        // Get user's input
+        searchTextString = searchText.getText().toString();
+        if(searchTextString.isEmpty()){
+            Toast.makeText(SearchActivity.this, "Nothing to search for.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Re-init everything used from previous sessions:
+        // Empty previous session's lists
+        books.clear();
+        lessBooks.clear();
+        System.gc();
+
+        // Notify adapter
+        adapter.notifyDataSetChanged();
+
+        // Init maxPages num to 0 (unknown), currentPage to 1
+        currentPage = 1;
+        maxPages = 0;
+
+        // Loading = false
+        loading = false;
+
+        listManager = new ListManager(currentPage);
+        listManager.execute(searchTextString);
     }
 
     private Boolean isNetworkAvailable(){
@@ -154,26 +256,13 @@ public class SearchActivity extends AppCompatActivity {
         return true;
     }
 
-    private void startSearch(){
-        if(manager.getStatus() == AsyncTask.Status.RUNNING){
-            // New search initiated. Cancel task
-            manager.cancel(true);
-        }
-        // Get user's input
-        String input = searchText.getText().toString();
-        if(input.isEmpty()){
-            Toast.makeText(SearchActivity.this, "Nothing to search for!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if(isNetworkAvailable()) {
-            manager = new ListManager();
-            manager.execute(input);
-        }
-        else{
-            Toast.makeText(SearchActivity.this, "Not connected to the internet", Toast.LENGTH_SHORT).show();
+    private void showMoreBooks(int itemsPerPage){
+        int start = lessBooks.size();
+        int end = Math.min(lessBooks.size() + itemsPerPage, books.size());
+        for(int i=start; i < end; i++){
+            lessBooks.add(books.get(i));
         }
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -182,11 +271,14 @@ public class SearchActivity extends AppCompatActivity {
 
         initComponents();
         addListenersToComponents();
-        manager = new ListManager();
-
     }
 
-    private class ListManager extends AsyncTask<String, Void, Void> {
+    private class ListManager extends AsyncTask<String, Integer, Void> {
+        private int pageToDownload;
+
+        public ListManager(int pageNum){
+            this.pageToDownload = pageNum;
+        }
 
         private void populateBookTitleList(JSONArray docs){
             for(int i=0; i < docs.length(); i++){
@@ -217,25 +309,16 @@ public class SearchActivity extends AppCompatActivity {
                         b.setCoverOLID( obj.getString("cover_edition_key"));
                         b.buildCoverURL(BookTitle.MEDIUM);
                     }
-                    if(b.hasCoverId() || b.hasCoverOLID()){
-                        Bitmap bmp = Glide.with(SearchActivity.this.getApplicationContext()).load(b.getCoverURL()).asBitmap().into(-1, -1).get();
-                        b.setCoverBitmap(bmp);
-                    }
                     books.add(b);
                 } catch (JSONException e){
                     Log.e("JSON", "Could not retrieve data for JSONObject in position " + i);
-                    e.printStackTrace();
-                } catch (ExecutionException e){
-                    Log.e("JSON", "Execution error, download aborted");
-                    e.printStackTrace();
-                } catch (InterruptedException e){
-                    Log.e("JSON", "Image download interrupted");
                     e.printStackTrace();
                 }
             }
         }
 
         private void emptyBookTitleList(){
+            lessBooks.clear();
             books.clear();
             System.gc();
         }
@@ -253,7 +336,7 @@ public class SearchActivity extends AppCompatActivity {
             return (builder.toString());
         }
 
-        private String buildSearchUrlString(String input){
+        private String buildSearchUrlString(String input, int page){
             StringBuffer buffer = new StringBuffer();
             String domain = "https://openlibrary.org/";
             String action = "search";
@@ -267,85 +350,123 @@ public class SearchActivity extends AppCompatActivity {
                     .append("?")
                     .append(searchType)
                     .append("=")
-                    .append(query);
+                    .append(query)
+                    .append("&page=")
+                    .append(page);
 
             return buffer.toString();
         }
 
-        private JSONArray concatArray(JSONArray first, JSONArray last){
-            for(int i = 0; i < last.length(); i++){
-                try {
-                    first.put(last.get(i));
-                }catch (JSONException e){
-                    Log.e("JSON", "Could not concatenate JSONArrays");
-                    e.printStackTrace();
-                }
-            }
-            return first;
-        }
-
         @Override
-        protected void onPreExecute() {
-            emptyBookTitleList();
-            searchLoadingSpinner.setVisibility(View.VISIBLE);
-            noResultsText.setVisibility(View.GONE);
-        }
-
-        @Override
-        protected Void doInBackground(String... params) {
-            // Check Internet connection
-
+        protected Void doInBackground(String... input) {
             JSONObject obj;
             JSONArray docs;
-            String searchUrl = buildSearchUrlString(params[0]);
+            String searchUrl;
 
-            // Create new URL to connect to, initially no page
+            searchUrl = buildSearchUrlString(input[0], pageToDownload);
+
+            // Create new URL to connect to, initially page 1
             DownloadJSON downloader = new DownloadJSON(searchUrl);
 
             // Download json and create a new object for it
             obj = downloader.downloadJSONObject();
 
-            // Find max num of pages
-            int resultsPerPage = 100;
-            int numFound;
-            try{
-                numFound = Integer.parseInt( obj.getString("numFound") );
-            } catch (JSONException e){
-                Log.e("JSON", "Error in fetching data for key \"numFound\"");
-                e.printStackTrace();
-                return null;
+            if(maxPages == 0) {
+                // Find max num of pages
+                int resultsPerPage = 100;
+                int numFound;
+                try {
+                    numFound = Integer.parseInt(obj.getString("numFound"));
+                } catch (JSONException e) {
+                    Log.e("JSON", "Error in fetching data for key \"numFound\"");
+                    e.printStackTrace();
+                    return null;
+                }
+                maxPages = 1 + numFound / resultsPerPage;
             }
-            int pages = 1 + numFound / resultsPerPage;
 
             // Create a new JSONArray to fill with book docs
             docs = downloader.getJSONArrayFromJSONObject(obj, "docs");
-
-            // Foreach page, fetch json and add its' docs JSONArray to existing docs
-            for(int i = 1; i < pages; i ++){
-                StringBuilder urlBuilder = new StringBuilder();
-                urlBuilder  .append(searchUrl)
-                            .append("&page=" + (i+1));
-                downloader.setUrl(urlBuilder.toString());
-                obj = downloader.downloadJSONObject();
-                docs = concatArray(docs, downloader.getJSONArrayFromJSONObject(obj, "docs"));
-            }
 
             populateBookTitleList(docs);
             return null;
         }
 
         @Override
-        protected void onPostExecute(Void voidElement) {
-            searchLoadingSpinner.setVisibility(View.GONE);
-            if(books.isEmpty())
-                noResultsText.setVisibility(View.VISIBLE);
-
-            // TODO implement items per page!! See Endless RecyclerView Scroll Listener
+        protected void onPreExecute() {
+            loading = true;
+            if(lessBooks.isEmpty()) {
+                searchLoadingSpinner.setVisibility(View.VISIBLE);
+                noResultsText.setVisibility(View.GONE);
+            }
+            else{
+                lessBooks.add(null);
+                //adapter.notifyDataSetChanged();
+                // TODO this or the one below??
+                adapter.notifyItemInserted(lessBooks.size()-1);
+            }
         }
 
         @Override
-        protected void onCancelled(Void voidElement) {
+        protected void onCancelled(Void aVoid) {
+            loading = false;
             emptyBookTitleList();
+        }
+
+        @Override
+        protected void onPostExecute(Void voidElement) {
+            if(lessBooks.isEmpty()) {
+                searchLoadingSpinner.setVisibility(View.GONE);
+                if (books.isEmpty())
+                    noResultsText.setVisibility(View.VISIBLE);
+            }
+            else{
+                adapter.notifyItemRemoved(lessBooks.size() - 1);
+                lessBooks.remove(lessBooks.size() - 1);
+            }
+
+            int start = lessBooks.size();
+            int bookNum = Math.min(25, books.size() - lessBooks.size() );
+            showMoreBooks(bookNum);
+            new DownloadManager().execute(start, lessBooks.size());
+            adapter.notifyDataSetChanged();
+            loading = false;
+        }
+    }
+
+    private class DownloadManager extends AsyncTask<Integer, Integer, Void>{
+        @Override
+        protected Void doInBackground(Integer ... position) {
+            int start = position[0];
+            int end = position[1];
+            for(int i=start; i < end; i++){
+                BookTitle b = lessBooks.get(i);
+                if(!b.hasCoverBitmap() && (b.hasCoverId() || b.hasCoverOLID())) {
+                    try {
+                        Bitmap bmp = Glide.with(SearchActivity.this.getApplicationContext()).load(b.getCoverURL()).asBitmap().into(-1, -1).get();
+                        b.setCoverBitmap(bmp);
+                        publishProgress(i);
+                    } catch (ExecutionException e) {
+                        Log.e("JSON", "Execution error, download aborted");
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        Log.e("JSON", "Image download interrupted");
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer ... position) {
+            // Notify that a bitmap is available
+            adapter.notifyItemChanged(position[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            loading = false;
         }
     }
 }

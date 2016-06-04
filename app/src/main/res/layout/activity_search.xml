@@ -33,7 +33,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignBottom="@+id/searchButton"/>
-    
+
     <View
         android:id="@+id/searchDivider"
         android:layout_width="match_parent"

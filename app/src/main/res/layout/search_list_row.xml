@@ -4,60 +4,97 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <ImageView
-        android:contentDescription="@string/thumbnail_string"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:id="@+id/cover"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
-        android:layout_marginRight="5dp"
-        android:layout_marginEnd="5dp"
-        android:src="@drawable/no_cover" />
-
-    <TextView
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#000000"
-        android:text="@string/title_init_text"
-        android:id="@+id/fullTitle"
-        android:layout_alignTop="@+id/cover"
-        android:layout_toRightOf="@+id/cover"
-        android:layout_toEndOf="@+id/cover"
-        android:layout_marginLeft="5dp"
-        android:layout_marginStart="5dp"
-        android:ellipsize="end"
-        android:maxLines="3" />
+        android:id="@+id/rowLayout">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="@string/authors_init_text"
-        android:id="@+id/authors"
-        android:layout_alignBottom="@+id/cover"
-        android:layout_toRightOf="@+id/cover"
-        android:layout_toEndOf="@+id/cover"
-        android:layout_marginLeft="5dp"
-        android:layout_marginStart="5dp"
-        android:ellipsize="end"
-        android:maxLines="1" />
+        <FrameLayout
+            android:id="@+id/coverLayout"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginEnd="5dp" >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="@string/editions_num_init_text"
-        android:id="@+id/editionNumber"
-        android:layout_toRightOf="@id/authors"
-        android:layout_toEndOf="@id/authors"
-        android:gravity="end"
-        android:layout_alignBottom="@+id/cover"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:maxLines="1"
-        android:layout_marginLeft="5dp"
-        android:layout_marginStart="5dp"
-        android:textStyle="italic" />
+            <ImageView
+                android:contentDescription="@string/thumbnail_string"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/cover"
+                android:src="@drawable/no_cover" />
+
+            <ProgressBar
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:id="@+id/loadCoverSpinner"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="#000000"
+            android:text="@string/title_init_text"
+            android:id="@+id/fullTitle"
+            android:layout_alignTop="@+id/coverLayout"
+            android:layout_toRightOf="@+id/coverLayout"
+            android:layout_toEndOf="@+id/coverLayout"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
+            android:ellipsize="end"
+            android:maxLines="3" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/authors_init_text"
+            android:id="@+id/authors"
+            android:layout_alignBottom="@+id/coverLayout"
+            android:layout_toRightOf="@+id/coverLayout"
+            android:layout_toEndOf="@+id/coverLayout"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
+            android:ellipsize="end"
+            android:maxLines="1" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/editions_num_init_text"
+            android:id="@+id/editionNumber"
+            android:layout_toRightOf="@id/authors"
+            android:layout_toEndOf="@id/authors"
+            android:gravity="end"
+            android:layout_alignBottom="@+id/coverLayout"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:maxLines="1"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
+            android:textStyle="italic" />
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_alignBottom="@id/rowLayout"
+        android:layout_height="match_parent"
+        android:id="@+id/loadMoreLayout">
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/loadMoreSpinner"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
 </RelativeLayout>
