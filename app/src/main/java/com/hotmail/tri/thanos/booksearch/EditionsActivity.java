@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 public class EditionsActivity extends AppCompatActivity {
 
     private List<BookEdition> books;
+    private List<BookEdition> lessBooks;
 
     private ImageView coverImage;
     private TextView titleText;
@@ -42,11 +43,14 @@ public class EditionsActivity extends AppCompatActivity {
     private RecyclerView bookEditionsList;
     private ProgressBar editionsLoadingSpinner;
 
-    ListManager manager;
+    private BookEditionAdapter adapter;
+
+    private ListManager manager;
 
     private void initComponents(){
         // Init book list
         books = new ArrayList<>();
+        lessBooks = new ArrayList<>();
 
         // Init ImageView component
         coverImage = (ImageView) findViewById(R.id.coverImage);
@@ -61,7 +65,7 @@ public class EditionsActivity extends AppCompatActivity {
         assert bookEditionsList != null;
         bookEditionsList.setHasFixedSize(true);
         bookEditionsList.setItemAnimator(new DefaultItemAnimator());
-        BookEditionAdapter adapter = new BookEditionAdapter(books);
+        adapter = new BookEditionAdapter(books);
         bookEditionsList.setAdapter(adapter);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -94,7 +98,7 @@ public class EditionsActivity extends AppCompatActivity {
         editionsText.setText(buffer.toString());
     }
 
-    private void addListenerToRecycleView(){
+    private void addListenersToComponents(){
         // Add an OnTouchListener to RecyclerView to catch clicks on Views
         final GestureDetector detector = new GestureDetector(EditionsActivity.this, new GestureDetector.SimpleOnGestureListener(){
             @Override
@@ -155,7 +159,7 @@ public class EditionsActivity extends AppCompatActivity {
         initComponents();
         ArrayList<String> editionKeys = getIntent().getStringArrayListExtra("editionKeys");
         renderTopUI(editionKeys.size());
-        addListenerToRecycleView();
+        addListenersToComponents();
 
 
         String [] editionKeysArray = editionKeys.toArray(new String[editionKeys.size()]);
@@ -169,7 +173,7 @@ public class EditionsActivity extends AppCompatActivity {
         }
     }
 
-    private class ListManager extends AsyncTask<String, Void, Void>{
+    private class ListManager extends AsyncTask<String, Integer, Void>{
 
         private void populateBookEditionList(JSONObject object){
             try {
@@ -195,21 +199,11 @@ public class EditionsActivity extends AppCompatActivity {
                         b.addPublisher(array.getJSONObject(j).getString("name"));
                     }
                 }
-                if(b.hasCoverURL()){
-                    Bitmap bmp = Glide.with(EditionsActivity.this.getApplicationContext()).load(b.getCoverURL()).asBitmap().into(-1, -1).get();
-                    b.setCoverBitmap(bmp);
-                }
+                // Remove null from the list and add the book
+                books.remove(books.size() - 1);
                 books.add(b);
             }catch (JSONException e){
                 Log.e("JSON", "Could not retrieve data for JSONObject");
-                e.printStackTrace();
-            }
-            catch (ExecutionException e){
-                Log.e("JSON", "Execution error, download aborted");
-                e.printStackTrace();
-            }
-            catch (InterruptedException e){
-                Log.e("JSON", "Image download interrupted");
                 e.printStackTrace();
             }
         }
@@ -240,14 +234,12 @@ public class EditionsActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             emptyBookEditionList();
-            editionsLoadingSpinner.setVisibility(View.VISIBLE);
         }
 
         @Override
         protected Void doInBackground(String... params) {
-            // Update ImageView with real book cover
-
             for(int i=0; i < params.length; i++) {
+                publishProgress(-1);
                 String fetchDataUrl = buildFetchInfoURLString(params[i]);
                 DownloadJSON downloader = new DownloadJSON(fetchDataUrl);
 
@@ -263,22 +255,64 @@ public class EditionsActivity extends AppCompatActivity {
                         return null;
                     }
                     populateBookEditionList(bookObject);
+                    publishProgress(i);
                 }
             }
             return null;
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            editionsLoadingSpinner.setVisibility(View.GONE);
-
-            // TODO implement items per page!! See Endless RecyclerView Scroll Listener
+        protected void onProgressUpdate(Integer... values) {
+            if(values[0] == -1){
+                books.add(null);
+                adapter.notifyDataSetChanged();
+            }
+            else{
+                adapter.notifyDataSetChanged();
+                new DownloadManager().execute(books.size() - 1);
+            }
         }
+
         @Override
         protected void onCancelled(Void voidElement) {
             emptyBookEditionList();
         }
     }
+
+    private class DownloadManager extends AsyncTask<Integer, Integer, Void>{
+        @Override
+        protected Void doInBackground(Integer ... position) {
+            BookEdition b = books.get(position[0]);
+            if(b.hasCoverURL()){
+                if(!b.hasCoverBitmap()){
+                    try {
+                        Bitmap bmp = Glide.with(EditionsActivity.this.getApplicationContext()).load(b.getCoverURL()).asBitmap().into(-1, -1).get();
+                        b.setCoverBitmap(bmp);
+                        publishProgress(position[0]);
+                    } catch (ExecutionException e) {
+                        Log.e("JSON", "Execution error, download aborted");
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        Log.e("JSON", "Image download interrupted");
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer ... position) {
+            // Notify that a bitmap is available
+            adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            // Nothing to do
+        }
+    }
+
 }
 
 

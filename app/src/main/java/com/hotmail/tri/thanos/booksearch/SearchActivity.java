@@ -418,12 +418,6 @@ public class SearchActivity extends AppCompatActivity {
             new DownloadManager().execute(start, start + bookNum);
             adapter.notifyDataSetChanged();
         }
-        /*                             loading = true;
-                            int start = lessBooks.size();
-                            int bookNum = Math.min(25, books.size() - start);
-                            showMoreBooks(bookNum);
-                            adapter.notifyDataSetChanged();
-                            new DownloadManager().execute(start, start + bookNum);*/
     }
 
     private class DownloadManager extends AsyncTask<Integer, Integer, Void>{

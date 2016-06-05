@@ -16,4 +16,5 @@
     <string name="publisher_init_string">Published by:\nPublisher</string>
     <string name="ebook_string">E-book</string>
     <string name="paper_book_string">Paper book</string>
+    <string name="title_activity_recycler_view">RecyclerViewActivity</string>
 </resources>

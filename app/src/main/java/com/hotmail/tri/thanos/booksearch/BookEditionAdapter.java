@@ -4,7 +4,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.List;
@@ -18,12 +21,29 @@ public class BookEditionAdapter extends RecyclerView.Adapter<BookEditionAdapter.
         public TextView authors;
         public TextView bookType;
 
+        public FrameLayout loadingLayout;
+        public RelativeLayout rowLayout;
+
+        public ProgressBar loadCoverSpinner;
+
         public BookViewHolder(View v){
             super(v);
-            cover = (ImageView) v.findViewById(R.id.cover);
-            fullTitle = (TextView) v.findViewById(R.id.fullTitle);
-            authors = (TextView) v.findViewById(R.id.authors);
-            bookType = (TextView) v.findViewById(R.id.bookType);
+            cover = (ImageView) v.findViewById(R.id.editionsCover);
+            fullTitle = (TextView) v.findViewById(R.id.editionsFullTitle);
+            authors = (TextView) v.findViewById(R.id.editionsAuthors);
+            bookType = (TextView) v.findViewById(R.id.editionsBookType);
+
+            rowLayout = (RelativeLayout) v.findViewById(R.id.editionsRowLayout);
+            rowLayout.setVisibility(View.VISIBLE);
+
+            loadingLayout = (FrameLayout) v.findViewById(R.id.editionsLoadMoreLayout);
+            loadingLayout.setVisibility(View.GONE);
+
+            loadCoverSpinner = (ProgressBar) v.findViewById(R.id.editionsLoadCoverSpinner);
+            loadCoverSpinner.setVisibility(View.GONE);
+
+            ProgressBar loadMoreSpinner = (ProgressBar) v.findViewById(R.id.editionsLoadMoreSpinner);
+            loadMoreSpinner.setVisibility(View.VISIBLE);
         }
     }
 
@@ -43,10 +63,29 @@ public class BookEditionAdapter extends RecyclerView.Adapter<BookEditionAdapter.
     @Override
     public void onBindViewHolder(BookViewHolder holder, int position) {
         BookEdition current = books.get(position);
-        if(current.hasCoverBitmap())
-            holder.cover.setImageBitmap(current.getCoverBitmap());
-        else
+        if(current == null){
+            holder.loadingLayout.setVisibility(View.VISIBLE);
+            holder.rowLayout.setVisibility(View.GONE);
+            return;
+        }
+        holder.loadingLayout.setVisibility(View.GONE);
+        holder.rowLayout.setVisibility(View.VISIBLE);
+
+        if(!current.hasCoverURL()){
             holder.cover.setImageResource(R.drawable.no_cover);
+        }
+        else{
+            if(current.hasCoverBitmap()){
+                holder.cover.setImageBitmap(current.getCoverBitmap());
+                holder.loadCoverSpinner.setVisibility(View.GONE);
+                holder.cover.setVisibility(View.VISIBLE);
+            }
+            else{
+                holder.cover.setVisibility(View.GONE);
+                holder.loadCoverSpinner.setVisibility(View.VISIBLE);
+            }
+        }
+
         holder.fullTitle.setText(current.getFullTitle());
         holder.authors.setText(current.getAuthorsString());
         if(current.getNumberOfPages() <= 0)

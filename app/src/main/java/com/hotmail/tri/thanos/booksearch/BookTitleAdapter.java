@@ -62,8 +62,8 @@ public class BookTitleAdapter extends RecyclerView.Adapter<BookTitleAdapter.Book
     }
 
     @Override
-    public void onBindViewHolder(final BookViewHolder holder, int position) {
-        final BookTitle current = books.get(position);
+    public void onBindViewHolder(BookViewHolder holder, int position) {
+        BookTitle current = books.get(position);
         if(current == null){
             holder.loading.setVisibility(View.VISIBLE);
             holder.rowLayout.setVisibility(View.GONE);
